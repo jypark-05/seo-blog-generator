@@ -13,6 +13,7 @@ function getAuthInfo() {
       "https://www.googleapis.com/auth/documents",
       "https://www.googleapis.com/auth/spreadsheets",
       "https://www.googleapis.com/auth/drive",
+      "https://www.googleapis.com/auth/drive.file"
     ],
   });
 
@@ -20,7 +21,7 @@ function getAuthInfo() {
 }
 
 export async function POST(req: Request) {
-  let currentStep = "인증 정보 준비";
+  let currentStep = "인증 준비";
   let clientEmail = "알 수 없음";
 
   try {
@@ -42,20 +43,27 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: "v4", auth });
     const drive = google.drive({ version: "v3", auth });
 
-    // --- 1. Google Docs에 문서 생성 ---
-    currentStep = "Step 1: Google Docs 문서 생성";
+    // --- 1. Google Drive API를 사용하여 문서 파일 생성을 먼저 시도 (403 우회용) ---
+    currentStep = "Step 1: Google Drive API로 문서 생성";
     console.log(currentStep);
     
     const docTitle = `[SEO] ${topicTitle} - ${new Date().toLocaleDateString("ko-KR")}`;
-    const createRes = await docs.documents.create({
-      requestBody: { title: docTitle },
+    
+    // docs.create 대신 drive.files.create를 사용
+    const driveRes = await drive.files.create({
+      requestBody: {
+        name: docTitle,
+        mimeType: "application/vnd.google-apps.document",
+        parents: folderId ? [folderId] : []
+      },
+      fields: "id"
     });
 
-    const docId = createRes.data.documentId!;
+    const docId = driveRes.data.id!;
     const docUrl = `https://docs.google.com/document/d/${docId}/edit`;
 
-    // 본문 삽입
-    currentStep = "Step 2: Docs 본문 내용 삽입";
+    // --- 2. Docs API를 사용하여 본문 내용 삽입 ---
+    currentStep = "Step 2: 생성된 문서에 본문 내용 삽입";
     console.log(currentStep);
     await docs.documents.batchUpdate({
       documentId: docId,
@@ -71,32 +79,19 @@ export async function POST(req: Request) {
       },
     });
 
-    // 폴더로 이동 (비필수)
-    if (folderId) {
-      currentStep = "Step 2.5: 폴더 이동 (선택 사항)";
-      try {
-        const file = await drive.files.get({ fileId: docId, fields: "parents" });
-        const previousParents = (file.data.parents || []).join(",");
-        await drive.files.update({
-          fileId: docId,
-          addParents: folderId,
-          removeParents: previousParents,
-          fields: "id, parents",
-        });
-      } catch (e) { console.error("Folder move failed", e); }
-    }
-
-    // 문서 권한 설정 (비필수)
-    currentStep = "Step 2.8: 문서 공유 권한 설정 (선택 사항)";
+    // --- 3. 문서 권한 설정 (누구나 읽기 가능) ---
+    currentStep = "Step 3: 문서 공유 권한 설정";
     try {
       await drive.permissions.create({
         fileId: docId,
         requestBody: { role: "reader", type: "anyone" },
       });
-    } catch (e) { console.error("Permission set failed", e); }
+    } catch (e) {
+      console.warn("권한 설정 실패(비필수):", e);
+    }
 
-    // --- 2. Google Sheets에 아카이빙 ---
-    currentStep = "Step 3: Google Sheets 정보 확인";
+    // --- 4. Google Sheets에 아카이빙 ---
+    currentStep = "Step 4: Google Sheets 정보 확인 및 기록";
     const SHEET_ID = process.env.GOOGLE_SHEETS_ID || "1_uT4vIH9wsagpfiSepHKWAQ_h_J0cZG8z956R2ibWRs";
     
     let targetRange = "A:H";
@@ -107,13 +102,9 @@ export async function POST(req: Request) {
         targetRange = `${firstSheetName}!A:H`;
       }
     } catch (sheetErr: any) {
-      console.error("Sheet Get Failed", sheetErr);
-      if (sheetErr.status === 403) {
-        throw new Error(`시트 접근 권한이 없습니다. ID: ${SHEET_ID}`);
-      }
+      console.error("Sheet info fetch failed:", sheetErr);
     }
 
-    currentStep = "Step 4: Google Sheets 데이터 추가(Append)";
     const today = new Date().toLocaleDateString("ko-KR", {
       year: "numeric", month: "2-digit", day: "2-digit",
     });
@@ -136,17 +127,17 @@ export async function POST(req: Request) {
       requestBody: { values: [row] },
     });
 
-    return NextResponse.json({ docUrl, docId, message: "저장 성공!" });
+    return NextResponse.json({ docUrl, docId, message: "구글 저장 성공!" });
   } catch (error: any) {
     console.error(`Error at ${currentStep}:`, error);
     
-    let detail = error?.message || "상세 사유 알 수 없음";
+    let detail = error?.message || "알 수 없는 오류";
     if (error?.response?.data?.error?.message) {
       detail = error.response.data.error.message;
     }
 
     return NextResponse.json({ 
-      error: `Google 저장 실패!\n[위치]: ${currentStep}\n[사유]: ${detail}\n[연결 계정]: ${clientEmail}\n\n* 위 계정이 해당 문서/시트에 '편집자'로 추가되어 있는지, 그리고 Cloud Console에서 관련 API가 켜져 있는지 확인해 주세요.` 
+      error: `[위치]: ${currentStep}\n[사유]: ${detail}\n[연결 계정]: ${clientEmail}\n\n* 모든 API가 켜져 있는데도 이 에러가 지속된다면 'OAuth 2.0 클라이언트' 방식으로 전환이 필요할 수 있습니다.` 
     }, { status: 500 });
   }
 }
