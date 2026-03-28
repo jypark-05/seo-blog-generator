@@ -38,6 +38,9 @@ function EditorContent() {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [done, setDone] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedDocUrl, setSavedDocUrl] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   const courseName = searchParams.get("courseName") || "";
   const target = searchParams.get("target") || "";
@@ -45,6 +48,7 @@ function EditorContent() {
   const topicTitle = searchParams.get("topicTitle") || "";
   const topicDirection = searchParams.get("topicDirection") || "";
   const topicHook = searchParams.get("topicHook") || "";
+  const contentType = searchParams.get("topicType") || "";
 
   const mainKeyword = searchParams.get("mainKeyword") || "";
   const subKeywords = searchParams.get("subKeywords")?.split(",") || [];
@@ -135,6 +139,38 @@ function EditorContent() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content);
     alert("클립보드에 복사되었습니다!");
+  };
+
+  const saveToGoogle = async () => {
+    setIsSaving(true);
+    setSaveError("");
+    setSavedDocUrl(null);
+    try {
+      const res = await fetch("/api/save-to-google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          courseName,
+          contentType,
+          target,
+          mainKeyword,
+          subKeywords,
+          topicTitle,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveError(data.error || "저장 실패");
+      } else {
+        setSavedDocUrl(data.docUrl);
+      }
+    } catch (err) {
+      console.error(err);
+      setSaveError("서버와의 통신에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -261,6 +297,53 @@ function EditorContent() {
                )}
             </div>
           </div>
+
+          {/* Google Docs 저장 */}
+          {done && (
+            <div className="bg-[#1c1c1e] border border-white/5 rounded-[32px] p-6 shadow-xl">
+              <h3 className="font-bold text-[15px] mb-4 text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#34a853]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM13 9V3.5L18.5 9H13zM7 13h10v2H7v-2zm0 4h7v2H7v-2z"/>
+                </svg>
+                Google Docs 저장
+              </h3>
+
+              {savedDocUrl ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 bg-[#30d158]/10 border border-[#30d158]/20 rounded-2xl px-4 py-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#30d158] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    <span className="text-[12px] font-bold text-[#30d158]">저장 및 아카이빙 완료!</span>
+                  </div>
+                  <a href={savedDocUrl} target="_blank" rel="noopener noreferrer"
+                    className="block w-full py-3 rounded-[16px] font-bold text-[13px] text-center bg-[#34a853]/20 text-[#34a853] hover:bg-[#34a853]/30 transition-all border border-[#34a853]/20">
+                    📄 Google Docs에서 열기
+                  </a>
+                </div>
+              ) : saveError ? (
+                <div className="space-y-3">
+                  <div className="bg-[#ff453a]/10 border border-[#ff453a]/20 rounded-2xl px-4 py-3">
+                    <span className="text-[12px] text-[#ff453a]">{saveError}</span>
+                  </div>
+                  <button onClick={saveToGoogle} className="w-full py-3 rounded-[16px] font-bold text-[13px] bg-white/10 text-white hover:bg-white/20 transition-all">
+                    다시 시도
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={saveToGoogle}
+                  disabled={isSaving}
+                  className={`w-full py-3.5 rounded-[16px] font-bold text-[13px] transition-all flex items-center justify-center gap-2
+                    ${isSaving ? 'bg-white/5 text-gray-500 cursor-not-allowed' : 'bg-[#34a853]/20 text-[#34a853] hover:bg-[#34a853]/30 border border-[#34a853]/20 active:scale-[0.98]'}`}
+                >
+                  {isSaving ? (
+                    <><div className="w-4 h-4 border-2 border-[#34a853] border-t-transparent rounded-full animate-spin"></div> 저장 중...</>
+                  ) : (
+                    <>Google Docs에 저장 + Sheets 아카이빙</>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="bg-[#1c1c1e] border border-white/5 rounded-[32px] p-6 mt-auto">
             <button
