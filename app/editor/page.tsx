@@ -41,6 +41,7 @@ function EditorContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedDocUrl, setSavedDocUrl] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
+  const [refiningItemId, setRefiningItemId] = useState<string | null>(null);
 
   const courseName = searchParams.get("courseName") || "";
   const target = searchParams.get("target") || "";
@@ -170,6 +171,45 @@ function EditorContent() {
       setSaveError("서버와의 통신에 실패했습니다.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFix = async (itemId: string, itemText: string) => {
+    if (isGenerating || isEvaluating || refiningItemId) return;
+    setRefiningItemId(itemId);
+    try {
+      const res = await fetch("/api/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          taskText: itemText,
+          mainKeyword
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "수정 중 오류가 발생했습니다.");
+      } else if (data.updatedContent) {
+        setContent(data.updatedContent);
+        // Re-evaluate after fix
+        setIsEvaluating(true);
+        const evalRes = await fetch("/api/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: data.updatedContent, mainKeyword })
+        });
+        if (evalRes.ok) {
+          const evalData = await evalRes.json();
+          setCheckedItems(evalData);
+        }
+        setIsEvaluating(false);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("서버와 통신에 실패했습니다.");
+    } finally {
+      setRefiningItemId(null);
     }
   };
 
@@ -412,10 +452,28 @@ function EditorContent() {
                             </svg>
                           )}
                         </div>
-                        <span className={`text-[13px] leading-relaxed transition-all duration-300 select-none
-                          ${isEvaluating ? 'text-gray-500' : isChecked ? 'text-gray-300' : 'text-red-400/90 font-medium'}`}>
-                          {item.text}
-                        </span>
+                        <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                          <span className={`text-[13px] leading-relaxed transition-all duration-300 select-none
+                            ${isEvaluating ? 'text-gray-500' : isChecked ? 'text-gray-300' : 'text-red-400/90 font-medium'}`}>
+                            {item.text}
+                          </span>
+                          {!isEvaluating && !isChecked && done && (
+                            <button
+                              onClick={() => handleFix(item.id, item.text)}
+                              disabled={!!refiningItemId}
+                              className={`self-start text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all flex items-center gap-1
+                                ${refiningItemId === item.id 
+                                  ? 'bg-[#3182f6]/10 border-[#3182f6]/30 text-[#3182f6] animate-pulse' 
+                                  : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 active:scale-95'}`}
+                            >
+                              {refiningItemId === item.id ? (
+                                <><div className="w-2 h-2 border-1 border-[#3182f6] border-t-transparent rounded-full animate-spin"></div> 수정 중...</>
+                              ) : (
+                                <>자동 수정(Fix) ✨</>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
