@@ -83,21 +83,22 @@ export async function POST(req: Request) {
       }
     }
 
-    // 문서를 누구나 링크로 열람 가능하게 설정
+    // 문서를 누구나 링크로 열람 가능하게 설정 (reader)
     try {
+      console.log("Setting document permissions to 'anyone with link can read'...");
       await drive.permissions.create({
         fileId: docId,
         requestBody: {
-          role: "writer",
+          role: "reader",
           type: "anyone",
         },
       });
     } catch (permErr) {
-      console.error("Failed to set permissions:", permErr);
+      console.error("Failed to set permissions (non-critical):", permErr);
     }
 
     // --- 2. Google Sheets에 아카이빙 ---
-    const SHEET_ID = process.env.GOOGLE_SHEETS_ID || "1tncsdYpAxSQpxMgShm2VnyIp9gtjJrZboJzbZcNpElI";
+    const SHEET_ID = process.env.GOOGLE_SHEETS_ID || "1_uT4vIH9wsagpfiSepHKWAQ_h_J0cZG8z956R2ibWRs";
     
     // 시트 이름 동적 확인 (시트1 또는 Sheet1 등 대응)
     let targetRange = "A:H";
