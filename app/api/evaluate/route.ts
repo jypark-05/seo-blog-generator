@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
     
     const prompt = `
 당신은 완성된 블로그 글이 주어진 SEO 및 E-E-A-T 가이드라인을 잘 지켰는지 꼼꼼하게 평가하는 전문 검수자입니다.

@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       const apiKey = process.env.GEMINI_API_KEY;
       if (apiKey && apiKey !== 'placeholder') {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview", generationConfig: { responseMimeType: "application/json" } });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview", generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(`구글 검색 엔진의 연관검색어 기능처럼, "${mainKeyword}" 검색 시 하단에 노출될 법한 사람들이 가장 많이 찾는 실용적인 연관 검색어 3개를 생성해 주세요. 배열 형태(["새키워드1", "새키워드2", "새키워드3"])로 응답하세요.`);
         const response = await result.response;
         const text = response.text();
