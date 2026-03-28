@@ -1,28 +1,24 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 
-function getAuthInfo() {
-  const keyBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "";
-  if (!keyBase64) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY가 환경 변수에 설정되지 않았습니다.");
-  
-  const keyJson = JSON.parse(Buffer.from(keyBase64, "base64").toString("utf-8"));
-  
-  const auth = new google.auth.GoogleAuth({
-    credentials: keyJson,
-    scopes: [
-      "https://www.googleapis.com/auth/documents",
-      "https://www.googleapis.com/auth/spreadsheets",
-      "https://www.googleapis.com/auth/drive",
-      "https://www.googleapis.com/auth/drive.file"
-    ],
+/**
+ * OAuth 2.0 인증 정보를 사용하여 Google Auth 객체 생성
+ */
+function getOAuth2Client() {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  );
+
+  oauth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
   });
 
-  return { auth, keyJson };
+  return oauth2Client;
 }
 
 export async function POST(req: Request) {
-  let currentStep = "인증 준비";
-  let clientEmail = "알 수 없음";
+  let currentStep = "OAuth 2.0 인증 준비";
 
   try {
     const {
@@ -36,25 +32,27 @@ export async function POST(req: Request) {
       folderId,
     } = await req.json();
 
-    const { auth, keyJson } = getAuthInfo();
-    clientEmail = keyJson.client_email;
-    
+    if (!content || !topicTitle) {
+      return NextResponse.json({ error: "콘텐츠 또는 주제가 비어 있습니다." }, { status: 400 });
+    }
+
+    const auth = getOAuth2Client();
     const docs = google.docs({ version: "v1", auth });
     const sheets = google.sheets({ version: "v4", auth });
     const drive = google.drive({ version: "v3", auth });
 
-    // --- 1. Google Drive API를 사용하여 문서 파일 생성을 먼저 시도 (403 우회용) ---
-    currentStep = "Step 1: Google Drive API로 문서 생성";
+    // --- 1. Google Drive API를 사용하여 본인 계정에 문서 생성 ---
+    currentStep = "Step 1: 본인 계정 드라이브에 문서 생성";
     console.log(currentStep);
     
     const docTitle = `[SEO] ${topicTitle} - ${new Date().toLocaleDateString("ko-KR")}`;
     
-    // docs.create 대신 drive.files.create를 사용
+    // mimeType을 문서로 지정하여 생성
     const driveRes = await drive.files.create({
       requestBody: {
         name: docTitle,
         mimeType: "application/vnd.google-apps.document",
-        parents: folderId ? [folderId] : []
+        parents: folderId ? [folderId] : [] // 특정 폴더 지정 시 해당 폴더에 생성
       },
       fields: "id"
     });
@@ -79,21 +77,11 @@ export async function POST(req: Request) {
       },
     });
 
-    // --- 3. 문서 권한 설정 (누구나 읽기 가능) ---
-    currentStep = "Step 3: 문서 공유 권한 설정";
-    try {
-      await drive.permissions.create({
-        fileId: docId,
-        requestBody: { role: "reader", type: "anyone" },
-      });
-    } catch (e) {
-      console.warn("권한 설정 실패(비필수):", e);
-    }
-
-    // --- 4. Google Sheets에 아카이빙 ---
-    currentStep = "Step 4: Google Sheets 정보 확인 및 기록";
+    // --- 3. Google Sheets에 아카이빙 ---
+    currentStep = "Step 3: Google Sheets 기록";
     const SHEET_ID = process.env.GOOGLE_SHEETS_ID || "1_uT4vIH9wsagpfiSepHKWAQ_h_J0cZG8z956R2ibWRs";
     
+    // 시트 이름 자동 감지 (첫 번째 탭 사용)
     let targetRange = "A:H";
     try {
       const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
@@ -102,7 +90,11 @@ export async function POST(req: Request) {
         targetRange = `${firstSheetName}!A:H`;
       }
     } catch (sheetErr: any) {
-      console.error("Sheet info fetch failed:", sheetErr);
+      console.error("Sheet 감지 실패:", sheetErr);
+      // 권한 오류가 나면 메시지 표시
+      if (sheetErr.status === 403) {
+        throw new Error(`시트 접근 권한이 없습니다. ID: ${SHEET_ID}. 시트 우측 상단 '공유'에서 본인 이메일이 '편집자'인지 확인해주세요.`);
+      }
     }
 
     const today = new Date().toLocaleDateString("ko-KR", {
@@ -124,10 +116,14 @@ export async function POST(req: Request) {
       spreadsheetId: SHEET_ID,
       range: targetRange,
       valueInputOption: "USER_ENTERED",
-      requestBody: { values: [row] },
+      requestBody: {
+        values: [row],
+      },
     });
 
-    return NextResponse.json({ docUrl, docId, message: "구글 저장 성공!" });
+    console.log("Success! OAuth 2.0 flow completed.");
+    return NextResponse.json({ docUrl, docId, message: "구글 본인 계정에 저장 완료!" });
+
   } catch (error: any) {
     console.error(`Error at ${currentStep}:`, error);
     
@@ -137,7 +133,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ 
-      error: `[위치]: ${currentStep}\n[사유]: ${detail}\n[연결 계정]: ${clientEmail}\n\n* 모든 API가 켜져 있는데도 이 에러가 지속된다면 'OAuth 2.0 클라이언트' 방식으로 전환이 필요할 수 있습니다.` 
+      error: `[위치]: ${currentStep}\n[사유]: ${detail}\n\n* Client ID, Secret, Refresh Token이 정확한지 Vercel 환경 변수를 다시 확인해 주세요.` 
     }, { status: 500 });
   }
 }
