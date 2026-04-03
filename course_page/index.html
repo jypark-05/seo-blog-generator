@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파이썬 데이터 사이언스 부트캠프 | 부트캠프 끝판왕</title>
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+        :root {
+            --primary-color: #C42129;
+            --primary-light: #FDECEC;
+            --bg-color: #F9FAFB;
+            --white: #FFFFFF;
+            --dark-bg: #191F28;
+            --text-main: #191F28;
+            --text-sub: #4E5968;
+            --text-muted: #8B95A1;
+            --gray-100: #F2F4F6;
+            --max-width: 980px;
+            --mobile-width: 480px;
+            --radius-lg: 32px;
+            --radius-md: 18px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            background-color: var(--white);
+            box-shadow: 0 0 100px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        section {
+            padding: 120px 60px;
+            position: relative;
+        }
+
+        h1, h2, h3, h4 {
+            line-height: 1.3;
+            letter-spacing: -0.02em;
+        }
+
+        .left-align { text-align: left; }
+        .center-align { text-align: center; }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 20px 48px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 20px;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(196, 33, 41, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(196, 33, 41, 0.3);
+        }
+
+        .card {
+            background-color: var(--gray-100);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            transition: var(--transition);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        
+        .badge-primary { background-color: var(--primary-light); color: var(--primary-color); }
+        .badge-dark { background-color: rgba(255,255,255,0.1); color: var(--white); }
+
+        /* --- 1. HERO --- */
+        .section-hero {
+            padding-top: 160px;
+            padding-bottom: 120px;
+            background-color: var(--dark-bg);
+            color: var(--white);
+            overflow: hidden;
+        }
+
+        .hero-title {
+            font-size: 64px;
+            font-weight: 900;
+            margin-bottom: 40px;
+            line-height: 1.2;
+        }
+
+        .hero-title span { color: var(--primary-color); }
+
+        .hero-stats {
+            display: flex;
+            gap: 64px;
+            margin-top: 80px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 40px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-value { font-size: 32px; font-weight: 800; color: var(--primary-color); }
+        .stat-label { font-size: 14px; opacity: 0.6; font-weight: 600; }
+
+        /* --- 2. INTRO --- */
+        .section-intro {
+            background-color: var(--white);
+            padding-bottom: 80px;
+        }
+
+        .intro-text {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 32px;
+        }
+
+        /* --- Grid Layouts --- */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .section-title {
+            font-size: 40px;
+            font-weight: 850;
+            margin-bottom: 64px;
+        }
+
+        /* Curriculum Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 12px;
+            bottom: 12px;
+            width: 2px;
+            background-color: var(--gray-100);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 64px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            border: 4px solid var(--white);
+            box-shadow: 0 0 0 2px var(--gray-100);
+        }
+
+        footer {
+            padding: 64px 60px;
+            background-color: var(--dark-bg);
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* FAQ Accordion */
+        details {
+            background-color: var(--white);
+            border-radius: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--gray-100);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        details[open] { border-color: var(--primary-color); }
+
+        summary {
+            padding: 28px;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        summary::after { content: '＋'; color: var(--text-muted); }
+        details[open] summary::after { content: '－'; color: var(--primary-color); }
+
+        .faq-content {
+            padding: 0 28px 28px;
+            color: var(--text-sub);
+            border-top: 1px solid var(--gray-100);
+            padding-top: 24px;
+        }
+
+        .solution-case {
+            background-color: var(--dark-bg);
+            color: var(--white);
+        }
+
+        .icon-circle {
+            width: 72px;
+            height: 72px;
+            background-color: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+
+        .icon-circle svg { width: 32px; height: 32px; fill: var(--primary-color); }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 24px;
+        }
+
+        .benefit-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        /* Funding Steps */
+        .funding-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 48px;
+        }
+
+        .step-item {
+            text-align: center;
+        }
+
+        .step-num {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 980px) {
+            .container { width: 100%; }
+            section { padding: 100px 40px; }
+            .hero-title { font-size: 48px; }
+            .grid-3 { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .benefit-grid { grid-template-columns: repeat(2, 1fr); }
+            .funding-steps { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            section { padding: 80px 24px; }
+            .hero-title { font-size: 36px; }
+            .hero-stats { flex-direction: column; gap: 32px; }
+            .btn-primary { width: 100%; }
+            .benefit-grid { grid-template-columns: 1fr; }
+            .funding-steps { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Section 01: 히어로 / 헤더 (Hero Section) -->
+        <section class="section-hero" style="padding-top: 160px; padding-bottom: 120px; background-color: var(--dark-bg); color: var(--white); overflow: hidden;">
+            <div class="badge badge-dark">취업률 압도적 1위</div>
+            <h1 class="hero-title left-align">
+                파이썬 <span>데이터</span><br>
+                사이언스 마스터
+            </h1>
+            <p style="font-size: 20px; opacity: 0.8; margin-bottom: 48px;">
+                비전공자도 10주면 데이터 분석 전문가로 거듭납니다.<br>
+                실제 기업 데이터를 활용한 프로젝트로 커리어를 바꾸세요.
+            </p>
+            <a href="#cta" class="btn-primary">부트캠프 수강 신청하기</a>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value">100%</span>
+                    <span class="stat-label">수료생 만족도</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">No.1</span>
+                    <span class="stat-label">선택받은 과정</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">95%</span>
+                    <span class="stat-label">평균 수업 집중도</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 02: 핵심 강점 (Check Point) -->
+        <section class="section-intro">
+            <div class="center-align" style="margin-bottom: 80px;">
+                <span class="badge badge-primary">Check Point</span>
+                <h2 class="section-title" style="margin-bottom: 0;">왜 우리 부트캠프를<br>선택해야 할까요?</h2>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <div style="font-size: 40px; margin-bottom: 24px;">🚀</div>
+                    <h3 style="margin-bottom: 16px;">실전 프로젝트 위주</h3>
+                    <p class="text-sub">이론만 배우지 않습니다. 기업의 실제 매출 데이터, 로그 데이터를 분석하며 감각을 익힙니다.</p>
+                </div>
+                <div class="card">
+                    <div style="font-size: 40px; margin-bottom: 24px;">👥</div>
+                    <h3 style="margin-bottom: 16px;">1:1 멘토링 시스템</h3>
+                    <p class="text-sub">학습 중 막히는 부분은 실시간 멘토링을 통해 즉시 해결합니다. 포기 없는 성장을 돕습니다.</p>
+                </div>
+                <div class="card">
+                    <div style="font-size: 40px; margin-bottom: 24px;">🎯</div>
+                    <h3 style="margin-bottom: 16px;">압도적 포트폴리오</h3>
+                    <p class="text-sub">수료 시 데이터 스토리텔링이 담긴 고퀄리티 포트폴리오를 완성하여 취업 시장에 투입됩니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 03: 해결책 제안 (Solution Case Study) -->
+        <section class="solution-case">
+            <h2 class="section-title center-align" style="color: var(--white);">해결책: 비전공자도 가능하게<br>만드는 3가지 장치</h2>
+            <div class="grid-3">
+                <div class="glass-card">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <h4>비전공자 맞춤형</h4>
+                    <p style="opacity: 0.7; font-size: 14px; margin-top: 12px;">코딩 지식이 없어도 파이썬을 쉽게 이해할 수 있는 직관적인 리플레이 학습법 적용</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    </div>
+                    <h4>데이터 분석 집중</h4>
+                    <p style="opacity: 0.7; font-size: 14px; margin-top: 12px;">단순 명령어 사용을 넘어, 현업에서 가장 많이 쓰이는 라이브러리(Pandas, Seaborn) 완벽 숙달</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+                    </div>
+                    <h4>문제 해결 프로젝트</h4>
+                    <p style="opacity: 0.7; font-size: 14px; margin-top: 12px;">기업이 직면한 실제 비즈니스 문제를 정의하고 해결방안을 도출하는 실무형 프로젝트</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 04: 대상자 정의 (Target Audience) -->
+        <section class="section-target" style="background-color: var(--gray-100);">
+            <div class="grid-2" style="align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 32px;">이런 분들을<br>기다리고 있습니다.</h2>
+                    <p class="text-sub" style="font-size: 18px;">
+                        데이터라는 막연한 꿈, 꿈으로만 두지 마세요.<br>
+                        기초부터 실무까지 저희가 길잡이가 되어 드립니다.
+                    </p>
+                </div>
+                <div style="display: grid; gap: 16px;">
+                    <div class="card" style="background-color: var(--white); padding: 24px;">✅ 데이터 분야로 커리어 전환을 꿈꾸는 분</div>
+                    <div class="card" style="background-color: var(--white); padding: 24px;">✅ 파이썬 독학에 매번 실패하신 분</div>
+                    <div class="card" style="background-color: var(--white); padding: 24px;">✅ 실전 데이터를 다루는 법을 배우고 싶은 취준생</div>
+                    <div class="card" style="background-color: var(--white); padding: 24px;">✅ 나만의 분석 포트폴리오가 필요한 분</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 05: 커리큘럼 (Curriculum) -->
+        <section class="section-curriculum">
+            <h2 class="section-title center-align">탄탄한 10주간의 여정</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3 style="font-size: 24px; margin-bottom: 12px;">Chap 1. 파이썬 프로그래밍 기초 (2주)</h3>
+                    <p class="text-sub">변수, 조건문, 반복문 등 파이썬의 기본 문법을 익히고 간단한 로직을 구현해 봅니다.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3 style="font-size: 24px; margin-bottom: 12px;">Chap 2. 데이터 시각화 및 EDA (3주)</h3>
+                    <p class="text-sub">Pandas와 Matplotlib을 활용하여 데이터를 탐색하고 시각적인 인사이트를 도출합니다.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3 style="font-size: 24px; margin-bottom: 12px;">Chap 3. 머신러닝 및 예측 모델링 (3주)</h3>
+                    <p class="text-sub">다양한 회기/분류 알고리즘을 배우고 실제 데이터를 기반으로 미래 결과를 예측해 봅니다.</p>
+                </div>
+                <div class="timeline-item">
+                    <h3 style="font-size: 24px; margin-bottom: 12px;">Chap 4. 최종 실무 프로젝트 (2주)</h3>
+                    <p class="text-sub">기업 협업 데이터를 사용하여 문제 정의부터 결론 도출까지 전체 프로세스를 수행합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 06: 강사 신뢰도 (Instructor) -->
+        <section class="section-instructor" style="background-color: var(--bg-color);">
+            <div class="card" style="background-color: var(--white); display: flex; gap: 48px; border-radius: 40px; align-items: center;">
+                <div style="width: 320px; height: 400px; background-color: var(--gray-100); border-radius: 24px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--text-muted);">[강사 이미지]</div>
+                <div style="flex: 1;">
+                    <span class="badge badge-primary">Lead Scientist</span>
+                    <h3 style="font-size: 32px; margin-bottom: 16px;">최정윤 강사</h3>
+                    <p class="text-sub" style="font-size: 18px; margin-bottom: 32px;">"데이터는 거짓말을 하지 않습니다. 거짓말을 하지 않는 데이터를 제대로 읽는 법을 알려드립니다."</p>
+                    <ul style="list-style: none; display: grid; gap: 12px; font-weight: 500;">
+                        <li>• 前 글로벌 IT 기업 데이터 사이언티스트</li>
+                        <li>• 現 커널아케데미 교육 총괄 실장</li>
+                        <li>• 누적 수강생 5,000명 이상, 만족도 4.9/5.0</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 07: 수강 혜택 (Benefits) -->
+        <section class="section-benefits">
+            <h2 class="section-title center-align">오직 수강생에게만<br>제공되는 특별한 혜택</h2>
+            <div class="benefit-grid">
+                <div class="card center-align" style="background-color: var(--white); border: 1px solid var(--gray-100);">
+                    <div style="font-size: 40px; margin-bottom: 16px;">💻</div>
+                    <h4 style="margin-bottom: 8px;">노트북 대여 지원</h4>
+                    <p class="text-muted" style="font-size: 14px;">성능 걱정 없이<br>학습에만 집중하세요</p>
+                </div>
+                <div class="card center-align" style="background-color: var(--white); border: 1px solid var(--gray-100);">
+                    <div style="font-size: 40px; margin-bottom: 16px;">🏠</div>
+                    <h4 style="margin-bottom: 8px;">24/7 학습 공간</h4>
+                    <p class="text-muted" style="font-size: 14px;">언제든지 열려있는<br>오프라인 커스텀 랩</p>
+                </div>
+                <div class="card center-align" style="background-color: var(--white); border: 1px solid var(--gray-100);">
+                    <div style="font-size: 40px; margin-bottom: 16px;">🏆</div>
+                    <h4 style="margin-bottom: 8px;">베스트 포트폴리오상</h4>
+                    <p class="text-muted" style="font-size: 14px;">우수 수료생을 위한<br>특별 포상 및 인터뷰</p>
+                </div>
+                <div class="card center-align" style="background-color: var(--white); border: 1px solid var(--gray-100);">
+                    <div style="font-size: 40px; margin-bottom: 16px;">📊</div>
+                    <h4 style="margin-bottom: 8px;">실무 템플릿 제공</h4>
+                    <p class="text-muted" style="font-size: 14px;">현업에서 바로 쓰는<br>분석 보고서 템플릿</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 08: 내일배움카드 국비지원 (Funding) -->
+        <section class="section-funding" style="background-color: var(--white); padding-top: 0;">
+            <div class="card" style="margin-top: 80px; background-color: var(--primary-light);">
+                <div class="center-align">
+                    <span class="badge badge-primary">Government Funding</span>
+                    <h3 style="font-size: 28px; color: var(--primary-color); margin-bottom: 16px;">최대 100% 국비 지원 혜택</h3>
+                    <p style="font-weight: 500;">내일배움카드를 통해 수강료 부담 없이 시작하세요.</p>
+                </div>
+                <div class="funding-steps">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <p style="font-weight: 700; font-size: 14px;">카드 발급 신청</p>
+                        <p class="text-muted" style="font-size: 12px; margin-top: 4px;">HRD-Net 홈페이지</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <p style="font-weight: 700; font-size: 14px;">선발 평가 참여</p>
+                        <p class="text-muted" style="font-size: 12px; margin-top: 4px;">입수 지원서 작성</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <p style="font-weight: 700; font-size: 14px;">오리엔테이션</p>
+                        <p class="text-muted" style="font-size: 12px; margin-top: 4px;">과정 안내 및 상담</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <p style="font-weight: 700; font-size: 14px;">부트캠프 합류</p>
+                        <p class="text-muted" style="font-size: 12px; margin-top: 4px;">데이터 마스터 시작</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 09: 구매 유도 (CTA) -->
+        <section id="cta" class="section-cta center-align" style="background-color: var(--dark-bg); color: var(--white); padding: 140px 60px;">
+            <div class="badge badge-primary">선착순 마감 임박</div>
+            <h2 style="font-size: 48px; font-weight: 900; margin-bottom: 32px;">여러분의 미래를<br>데이터로 설계하세요</h2>
+            <p style="font-size: 20px; opacity: 0.7; margin-bottom: 64px;">국비 지원 혜택으로 수강료 부담 없이 시작할 수 있습니다.</p>
+            <a href="#" class="btn-primary" style="padding: 24px 80px;">부트캠프 즉시 상담하기</a>
+        </section>
+
+        <!-- 20. FAQ -->
+        <section class="section-faq">
+            <h2 class="section-title center-align">자주 묻는 질문</h2>
+            <div style="max-width: 800px; margin: 0 auto;">
+                <details>
+                    <summary>Q. 비전공자도 정말 데이터 분석이 가능할까요?</summary>
+                    <div class="faq-content">
+                        네, 우리 과정 수료생의 70% 이상이 비전공자입니다. 수학적 지식이 부족해도 파이썬 툴을 활용해 논리적으로 접근하는 방법을 배우기 때문에 충분히 가능합니다.
+                    </div>
+                </details>
+                <details>
+                    <summary>Q. 수업에 필요한 장비가 있나요?</summary>
+                    <div class="faq-content">
+                        윈도우나 맥 노트북 중 하나만 있으면 됩니다. 고사양 노트북이 아니더라도 학습에 지장은 없습니다. 필요시 노트북 대여 지원 서비스도 활용하실 수 있습니다.
+                    </div>
+                </details>
+                <details>
+                    <summary>Q. 국비 지원 혜택은 어떻게 받나요?</summary>
+                    <div class="faq-content">
+                        내일배움카드를 통해 수강료의 80~100%를 지원받으실 수 있습니다. 상담 신청 시 카드 발급부터 수강 신청까지 친절하게 안내해 드립니다.
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2026 Kernel Academy | 데이터 사이언스 부트캠프. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

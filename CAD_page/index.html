@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[CAD] 전산응용건축제도기능사 (필기+실기) | 커널 아카데미</title>
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+        :root {
+            --primary: #A9223D;
+            --primary-light: #FDF2F4;
+            --primary-dark: #8A1B31;
+            --text-main: #1C1C1E;
+            --text-sub: #4A4A4A;
+            --text-muted: #8E8E93;
+            --bg-gray: #F5F7F9;
+            --white: #FFFFFF;
+            --dark-bg: #121212;
+            --max-width: 980px;
+            --mobile-width: 480px;
+            --radius-lg: 32px;
+            --radius-md: 18px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--white);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        section {
+            padding: 100px 60px;
+            position: relative;
+        }
+
+        .center-align { text-align: center; }
+        .left-align { text-align: left; }
+
+        h1, h2, h3, h4 {
+            line-height: 1.3;
+            letter-spacing: -0.02em;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .badge-primary { background-color: var(--primary-light); color: var(--primary); }
+        .badge-dark { background-color: rgba(255,255,255,0.1); color: var(--white); }
+
+        .section-title {
+            font-size: 44px;
+            font-weight: 850;
+            margin-bottom: 24px;
+        }
+
+        .section-desc {
+            font-size: 18px;
+            color: var(--text-sub);
+            margin-bottom: 64px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 22px 56px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 20px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .card {
+            background-color: var(--bg-gray);
+            border-radius: var(--radius-lg);
+            padding: 48px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 48px;
+        }
+
+        /* Hero */
+        .section-hero {
+            background-color: var(--dark-bg);
+            color: var(--white);
+            padding-top: 140px;
+            padding-bottom: 120px;
+            text-align: center;
+        }
+        .hero-title { font-size: 60px; font-weight: 900; margin-bottom: 32px; }
+        .hero-title span { color: var(--primary); }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            margin-top: 80px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 48px;
+        }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 36px; font-weight: 800; color: var(--primary); display: block; }
+        .stat-lab { font-size: 14px; opacity: 0.6; margin-top: 8px; }
+
+        /* Points */
+        .point-card {
+            background-color: var(--white);
+            border: 1px solid var(--bg-gray);
+            border-radius: 24px;
+            padding: 40px;
+            transition: var(--transition);
+        }
+        .point-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* Curriculum */
+        .curriculum-list {
+            margin-top: 60px;
+            display: grid;
+            gap: 20px;
+        }
+        .curriculum-item {
+            background-color: var(--dark-bg);
+            color: var(--white);
+            border-radius: 20px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+        .curriculum-part {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* FAQ */
+        details { background: var(--bg-gray); border-radius: 20px; margin-bottom: 16px; overflow: hidden; }
+        summary { padding: 32px; font-size: 19px; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+        summary::after { content: '＋'; color: var(--text-muted); }
+        .faq-content { padding: 0 32px 32px; color: var(--text-sub); line-height: 1.8; }
+
+        @media (max-width: 980px) {
+            section { padding: 80px 40px; }
+            .hero-title { font-size: 48px; }
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Section 01: 히어로 -->
+        <section class="section-hero">
+            <div class="badge-dark" style="border: 1px solid var(--primary); padding: 8px 20px; border-radius: 8px; margin-bottom: 32px; display: inline-block; color: var(--primary); font-weight: 700;">2024년 대비 최신강의</div>
+            <h1 class="hero-title">
+                전산응용건축제도기능사<br>
+                <span>(필기+실기)</span>
+            </h1>
+            <p style="font-size: 22px; opacity: 0.8; margin-bottom: 56px;">기초부터 실기까지 한번에 합격!</p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <a href="#" class="btn-primary">수강 신청</a>
+                <a href="#" class="btn-primary" style="background: transparent; border: 1px solid var(--white);">상담 하기</a>
+            </div>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-val">95%</span>
+                    <span class="stat-lab">합격률</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-val">4.9</span>
+                    <span class="stat-lab">평균 만족도</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-val">5,300명+</span>
+                    <span class="stat-lab">누적 수강생</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 02: 메시지 -->
+        <section class="center-align" style="padding-bottom: 0;">
+            <p style="color: var(--primary); font-weight: 700; margin-bottom: 16px;">취업을 위한 필수 코스</p>
+            <h2 class="section-title">건축 설계의 시작과 끝, [CAD]<br>전산응용건축제도기능사 자격증 취득 과정</h2>
+        </section>
+
+        <!-- Section 03: 포인트 (왜 이 과정인가?) -->
+        <section class="section-points center-align">
+            <h3 style="font-size: 24px; margin-bottom: 60px;">왜 이 과정을 선택해야 할까요?</h3>
+            <div class="grid-3" style="text-align: left;">
+                <div class="point-card">
+                    <div style="font-size: 32px; margin-bottom: 24px;">🎯</div>
+                    <h4 style="font-size: 20px; margin-bottom: 12px;">실전 도면 제작 위주</h4>
+                    <p class="text-sub">이론보다는 실제 도면 작성 위주의 커리큘럼으로 실무 역량을 극대화합니다.</p>
+                </div>
+                <div class="point-card">
+                    <div style="font-size: 32px; margin-bottom: 24px;">🖍️</div>
+                    <h4 style="font-size: 20px; margin-bottom: 12px;">1:1 밀착 멘토링</h4>
+                    <p class="text-sub">전문 강사진의 개별 피드백으로 오작을 방지하고 완벽한 도면을 완성합니다.</p>
+                </div>
+                <div class="point-card">
+                    <div style="font-size: 32px; margin-bottom: 24px;">🛡️</div>
+                    <h4 style="font-size: 20px; margin-bottom: 12px;">합격 보장 시스템</h4>
+                    <p class="text-sub">불합격 시 다음 회차 무료 재수강 지원으로 끝까지 책임을 다합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 04: 커리큘럼 -->
+        <section style="background-color: var(--bg-gray);">
+            <div class="center-align">
+                <span class="badge badge-primary">Curriculum</span>
+                <h2 class="section-title">커리큘럼 안내</h2>
+            </div>
+            
+            <div class="curriculum-list">
+                <div class="curriculum-item">
+                    <div class="curriculum-part">PART 01</div>
+                    <div>
+                        <h4 style="font-size: 20px; margin-bottom: 8px;">건축 제도 기초 이론 및 필기 대비</h4>
+                        <p style="opacity: 0.7;">도면의 기본 원리와 건축 구조/재료에 대한 이해</p>
+                    </div>
+                </div>
+                <div class="curriculum-item">
+                    <div class="curriculum-part">PART 02</div>
+                    <div>
+                        <h4 style="font-size: 20px; margin-bottom: 8px;">AutoCAD 기초 및 도면 설정</h4>
+                        <p style="opacity: 0.7;">CAD 인터페이스 숙달 및 레이어, 치수 스타일 설정</p>
+                    </div>
+                </div>
+                <div class="curriculum-item">
+                    <div class="curriculum-part">PART 03</div>
+                    <div>
+                        <h4 style="font-size: 20px; margin-bottom: 8px;">평면도, 단면도, 입면도 작성 실습</h4>
+                        <p style="opacity: 0.7;">기출 도면을 바탕으로 한 실제 작도 프로세스 습득</p>
+                    </div>
+                </div>
+                <div class="curriculum-item">
+                    <div class="curriculum-part">PART 04</div>
+                    <div>
+                        <h4 style="font-size: 20px; margin-bottom: 8px;">실전 기출문제 풀이 및 최종 모의고사</h4>
+                        <p style="opacity: 0.7;">시간 내 작도 훈련 및 오작 체크리스트 점검</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 05: 강사 소개 -->
+        <section class="section-instructor">
+            <div class="grid-2" style="align-items: center;">
+                <div style="background-color: var(--bg-gray); border-radius: 24px; overflow: hidden; height: 450px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-muted);"> [ 최정윤 강사 프로필 이미지 ] </div>
+                <div>
+                    <span class="badge badge-primary">Instructor</span>
+                    <h3 style="font-size: 32px; margin-bottom: 16px;">최정윤 강사</h3>
+                    <p style="font-weight: 700; color: var(--primary); margin-bottom: 24px;">현직 건축사 / 실무 경력 15년</p>
+                    <p class="text-sub" style="font-size: 19px; line-height: 1.7; margin-bottom: 32px;">"어렵고 복잡한 도면도 원리만 알면 단순해집니다. 실력으로 증명하는 합격의 가이드가 되어 드립니다."</p>
+                    <ul style="list-style: none; display: grid; gap: 12px; font-weight: 500;">
+                        <li>• 現 건축사사무소 대표 건축사</li>
+                        <li>• 건축 설계 및 실무 도면 작성 전문가</li>
+                        <li>• 자격증 시험 감독관급 첨삭 노하우 보유</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 06: 국비지원 -->
+        <section style="background-color: var(--primary); color: var(--white); text-align: center; border-radius: 40px; margin-bottom: 100px;">
+            <h2 style="font-size: 36px; font-weight: 850; margin-bottom: 24px;">매월 지급되는 훈련장려금과 함께<br>수강료 최대 100% 국비 지원</h2>
+            <p style="font-size: 18px; opacity: 0.8; margin-bottom: 48px;">국민내일배움카드 활용 시 비용 부담 없이 합격하세요!</p>
+            <a href="#" class="btn-primary" style="background: var(--white); color: var(--primary); border-radius: 12px;">지원 혜택 확인하기</a>
+        </section>
+
+        <!-- Section 07: FAQ -->
+        <section class="section-faq">
+            <h2 class="section-title center-align">자주 묻는 질문</h2>
+            <div style="max-width: 800px; margin: 0 auto; margin-top: 64px;">
+                <details>
+                    <summary>비전공자도 정말 따라갈 수 있나요?</summary>
+                    <div class="faq-content">
+                        네, 마우스 잡는 법과 좌표계의 이해부터 시작하여 누구나 도면을 그릴 수 있도록 체계적으로 교육합니다.
+                    </div>
+                </details>
+                <details>
+                    <summary>자격증 취득 후 취업 연결도 되나요?</summary>
+                    <div class="faq-content">
+                        자격증 취득은 물론, 실무 포트폴리오 제작과 기업 연계 상담을 통해 성공적인 취업을 돕고 있습니다.
+                    </div>
+                </details>
+                <details>
+                    <summary>수업 외에 자습이 가능한가요?</summary>
+                    <div class="faq-content">
+                        네, 아카데미 내 실습실을 상시 개방하여 언제든지 자유롭게 자습하고 복습하실 수 있습니다.
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- Section 08: 푸터 -->
+        <footer style="padding: 80px 60px; background-color: var(--dark-bg); color: rgba(255,255,255,0.4); text-align: center; font-size: 14px;">
+            <p style="margin-bottom: 12px;">© 2024 커널 아카데미. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
