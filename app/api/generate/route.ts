@@ -138,58 +138,26 @@ export async function POST(req: Request) {
       return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
     }
 
-    // Google Search Grounding을 위한 Direct Fetch 호출
-    const groundingPrompt = `
-이 글은 "${mainKeyword}"와 "${selectedTopic.title}"에 관련된 주제이므로, 해당 분야(${selectedTopic.title} 관련 전문 분야)의 최신 논문, 정부 발표 자료, 주요 언론 기사를 우선적으로 검색하여 참고하세요. 
-반드시 구글 검색 엔진을 활용하여 2022년 이후의 공신력 있는 데이터를 찾아 활용해야 합니다.
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-3.1-flash-lite-preview",
+      systemInstruction: systemPrompt 
+    });
 
-${systemPrompt}
+    const result = await model.generateContentStream(userPrompt);
 
-${userPrompt}
-    `;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: groundingPrompt }] }],
-          tools: [{ google_search: {} }],
-        }),
-      }
-    );
-
-    const data = await response.json();
-    
-    if (data.error) {
-      throw new Error(data.error.message || "Gemini API Error");
-    }
-
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "내용을 생성할 수 없습니다.";
-    
-    // 인용 출처 추출
-    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
-      title: chunk.web?.title,
-      url: chunk.web?.uri,
-    })) || [];
-
-    // 프론트엔드에서 스트리밍으로 처리하도록 (기능 호환성 유지) 수동 스트림 생성
     const stream = new ReadableStream({
       async start(controller) {
-        // 스트림의 처음에 JSON 형식임을 알리는 특수 문자 또는 구조를 넣을 수 있으나, 
-        // 여기서는 기존 가독성을 위해 텍스트만 먼저 보냅니다.
-        // 출처 정보는 마지막에 JSON 주석 형태로 붙이거나 별도 필드로 처리 가능하지만 
-        // 일단은 텍스트를 먼저 보냅니다.
-        const encoder = new TextEncoder();
-        controller.enqueue(encoder.encode(content));
-        
-        // 출처 정보를 텍스트 하단에 숨겨서 보냄 (프런트에서 파싱 가능하도록)
-        if (sources.length > 0) {
-          controller.enqueue(encoder.encode("\n\n---\nSOURCES_JSON:" + JSON.stringify(sources)));
+        try {
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            controller.enqueue(new TextEncoder().encode(chunkText));
+          }
+        } catch(e) {
+          controller.error(e);
+        } finally {
+          controller.close();
         }
-        
-        controller.close();
       }
     });
 

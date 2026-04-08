@@ -43,7 +43,6 @@ function EditorContent() {
   const [savedDocUrl, setSavedDocUrl] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
   const [refiningItemId, setRefiningItemId] = useState<string | null>(null);
-  const [groundingSources, setGroundingSources] = useState<any[]>([]);
 
   const courseName = searchParams.get("courseName") || "";
   const target = searchParams.get("target") || "";
@@ -101,20 +100,7 @@ function EditorContent() {
         const { value, done: doneReading } = await reader.read();
         if (doneReading) break;
         const chunk = decoder.decode(value, { stream: true });
-        
-        // 출처 정보가 포함되어 있는지 확인 (SOURCES_JSON: ... 형식)
-        if (chunk.includes("SOURCES_JSON:")) {
-          const parts = chunk.split("SOURCES_JSON:");
-          generatedText += parts[0];
-          try {
-            const sources = JSON.parse(parts[1]);
-            setGroundingSources(sources);
-          } catch (e) {
-            console.error("Failed to parse sources JSON", e);
-          }
-        } else {
-          generatedText += chunk;
-        }
+        generatedText += chunk;
         setContent(generatedText);
       }
     } catch (error) {
@@ -359,27 +345,6 @@ function EditorContent() {
                )}
             </div>
           </div>
-
-          {/* Grounding Sources Area */}
-          {groundingSources.length > 0 && (
-            <div className="bg-[#1c1c1e] border border-white/5 rounded-[32px] p-6 shadow-xl">
-              <h3 className="font-bold text-[14px] mb-4 text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#3182f6]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H3.46c-.19-.73-.3-1.49-.3-2.28 0-4.32 3.09-7.91 7.15-8.62L11 4c0 1.1.9 2 2 2h1v1c0 1.1.9 2 2 2h2v4.54c0 .54.26 1.04.7 1.36.19.14.41.22.64.22.25 0 .49-.09.68-.26l1.3-1.1c.14-.12.23-.29.23-.48s-.09-.36-.23-.48l-1.3-1.1c-.26-.22-.64-.22-.9 0-.15.13-.24.31-.24.51s.09.38.24.51l1.3 1.1c.42.36 1.05.36 1.47 0 .41-.36.41-.95 0-1.31l-1.3-1.1c-.55-.47-.88-1.16-.88-1.9v-1.1c0-1.1-.9-2-2-2h-1c-1.1 0-2-.9-2-2V3c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v1.1c0 .74.33 1.43.88 1.9l1.3 1.1c.14.12.23.29.23.48s-.09.36-.23.48l-1.3 1.1c-.26.22-.64.22-.9 0-.15-.13-.24-.31-.24-.51s.09-.38.24-.51l1.3-1.1c.42-.36 1.05-.36 1.47 0 .41.36.41.95 0 1.31l-1.3 1.1c-.55.47-.88 1.16-.88 1.9v1.1c0 1.1.9 2 2 2h1c1.1 0 2 .9 2 2v1h1c1.1 0 2 .9 2 2v1h1c.9 0 1.64.58 1.9 1.39.06.18.1.37.1.56s-.04.38-.1.56z"/>
-                </svg>
-                검증된 실시간 검색 소스
-              </h3>
-              <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
-                {groundingSources.map((source, i) => (
-                  <a key={i} href={source.url} target="_blank" rel="noopener noreferrer" 
-                    className="block p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
-                    <p className="text-[12px] font-bold text-white truncate mb-0.5">{source.title}</p>
-                    <p className="text-[10px] text-gray-500 truncate">{source.url}</p>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Google Docs 저장 */}
           {done && (
