@@ -54,7 +54,49 @@ const DEFAULT_SEO_GUIDE = `당신은 교육 회사의 Google SEO + GEO 최적화
 - 최소 3,000자 이상 (가능하면 3,500~4,000자)
 - 마크다운 형식 (# ## ### 사용)
 - 가독성: 한 문단은 최대 3~4문장으로 제한, Bullet Point 및 인용구(>) 적극 활용
-- 본문 중간 강의 홍보 금지`;
+- 본문 중간 강의 홍보 금지
+
+▶ 신쾌성 강화 — 최신 출처 의무 활용 규칙 (섹션 8)
+콘텐츠 작성 전, 아래 조건을 만족하는 외부 출처를 반드시 수집하고 본문에 활용하세요.
+
+[출처 수집 조건]
+- 수집 기간: 2022년 1월 이후 ~ 현재까지 발행된 자료만 허용
+- 최소 출처 수: 공신력 있는 출처 5개 이상 반드시 활용
+- 허용 출처 유형 (우선순위 순):
+  1. 국내외 학술 논문 (Google Scholar, RISS, DBpia, PubMed 등)
+  2. 정부/공공기관 공식 발표 자료 (고용노동부, 교육부, 통계청 등)
+  3. 주요 언론 기사 (한국경제, 매일경제, 조선일보, Forbes, Harvard Business Review 등)
+  4. 업계 공식 리포트 (McKinsey, Gartner, LinkedIn Learning 등)
+  5. 검증된 전문가 인터뷰 또는 칼럼
+
+[출처 활용 방법]
+- 수집한 출처는 본문 내 해당 주장 바로 뒤에 자연스럽게 인용
+- 인용 형식: (출처명, 발행연도) 또는 "○○에 따르면 ~" 형태로 작성
+- 수치나 통계 데이터는 반드시 출처 명시
+- 동일 출처를 2회 이상 반복 인용 금지
+
+[출처 검증 체크리스트]
+작성 완료 후 아래 항목을 자체 검토하세요.
+- [ ] 2022년 이후 출처가 5개 이상 활용되었는가?
+- [ ] 각 출처는 논문/공공기관/주요 언론 중 하나에 해당하는가?
+- [ ] 수치/통계 데이터에 모두 출처가 명시되었는가?
+- [ ] 출처가 본문 흐름에 자연스럽게 녹아있는가?
+
+[출력 시 추가 항목]
+본문 마지막에 아래 형식으로 참고 자료 목록을 반드시 포함하세요.
+
+---
+## 참고 자료
+1. [출처명] (발행연도) — 제목 또는 URL
+2. [출처명] (발행연도) — 제목 또는 URL
+... (최소 5개 이상)
+---
+
+[출처 신뢰성 주의사항]
+- 실제로 확인할 수 없거나 불확실한 출처는 절대 만들어내지 마세요.
+- 출처가 불확실한 경우 "관련 연구에 따르면~", "업계 전문가들은~" 형태의 일반적 서술로 대체하세요.
+- 논문 제목, 저자, 연도 등 구체적 정보가 확실하지 않으면 명시하지 마세요.
+- 참고 자료 목록에는 실제 존재가 확실한 출처만 포함하세요.`;
 
 export async function POST(req: Request) {
   try {
@@ -96,32 +138,64 @@ export async function POST(req: Request) {
       return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite-preview",
-      systemInstruction: systemPrompt 
-    });
+    // Google Search Grounding을 위한 Direct Fetch 호출
+    const groundingPrompt = `
+이 글은 "${mainKeyword}"와 "${selectedTopic.title}"에 관련된 주제이므로, 해당 분야(${selectedTopic.title} 관련 전문 분야)의 최신 논문, 정부 발표 자료, 주요 언론 기사를 우선적으로 검색하여 참고하세요. 
+반드시 구글 검색 엔진을 활용하여 2022년 이후의 공신력 있는 데이터를 찾아 활용해야 합니다.
 
-    const result = await model.generateContentStream(userPrompt);
+${systemPrompt}
 
+${userPrompt}
+    `;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: groundingPrompt }] }],
+          tools: [{ google_search: {} }],
+        }),
+      }
+    );
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error.message || "Gemini API Error");
+    }
+
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "내용을 생성할 수 없습니다.";
+    
+    // 인용 출처 추출
+    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.web?.title,
+      url: chunk.web?.uri,
+    })) || [];
+
+    // 프론트엔드에서 스트리밍으로 처리하도록 (기능 호환성 유지) 수동 스트림 생성
     const stream = new ReadableStream({
       async start(controller) {
-        try {
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            controller.enqueue(new TextEncoder().encode(chunkText));
-          }
-        } catch(e) {
-          controller.error(e);
-        } finally {
-          controller.close();
+        // 스트림의 처음에 JSON 형식임을 알리는 특수 문자 또는 구조를 넣을 수 있으나, 
+        // 여기서는 기존 가독성을 위해 텍스트만 먼저 보냅니다.
+        // 출처 정보는 마지막에 JSON 주석 형태로 붙이거나 별도 필드로 처리 가능하지만 
+        // 일단은 텍스트를 먼저 보냅니다.
+        const encoder = new TextEncoder();
+        controller.enqueue(encoder.encode(content));
+        
+        // 출처 정보를 텍스트 하단에 숨겨서 보냄 (프런트에서 파싱 가능하도록)
+        if (sources.length > 0) {
+          controller.enqueue(encoder.encode("\n\n---\nSOURCES_JSON:" + JSON.stringify(sources)));
         }
+        
+        controller.close();
       }
     });
 
     return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Generate API Error:", error);
-    return new Response(JSON.stringify({ error: "Failed to generate content" }), { status: 500 });
+    return new Response(JSON.stringify({ error: `Failed to generate content: ${error.message}` }), { status: 500 });
   }
 }
